@@ -16,7 +16,7 @@ public class HotelManagementRepository {
 
     public String addHotel(Hotel hotel) {
         String name = hotel.getHotelName();
-        if(!hotelMap.containsKey(name) || name == null)
+        if(hotelMap.containsKey(name) || name == null)
             return "FAILURE";
         else{
             hotelMap.put(name,hotel);
@@ -47,20 +47,16 @@ public class HotelManagementRepository {
     public String getHotelWithMostFacilities() {
         int count = 0;
         for(Hotel hotel : hotelMap.values()){
-            if(hotel.getFacilities().size() > count){
-                count = hotel.getFacilities().size();
-            }
+            count = Math.max(hotel.getFacilities().size() , count);
         }
+        if(count == 0)
+            return "";
         Set<String> list = new TreeSet<>();
         for(Hotel hotel : hotelMap.values()){
             if(hotel.getFacilities().size() == count){
                 list.add(hotel.getHotelName());
             }
         }
-
-        if(list == null)
-            return "";
-
         for(String s : list){
             return s;
         }
@@ -72,6 +68,9 @@ public class HotelManagementRepository {
             Hotel hotel = hotelMap.get(booking.getHotelName());
             if(hotel.getAvailableRooms() >= booking.getNoOfRooms()){
                 booking.setBookingId(String.valueOf(UUID.randomUUID()));
+                booking.setAmountToBePaid(hotel.getPricePerNight() * booking.getNoOfRooms());
+                hotel.setAvailableRooms(hotel.getAvailableRooms() - booking.getNoOfRooms());
+                hotelMap.put(hotel.getHotelName() , hotel);
                 if(bookingMap.containsKey(booking.getBookingAadharCard())){
                     List<Booking> bookingList = bookingMap.get(booking.getBookingAadharCard());
                     bookingList.add(booking);
@@ -81,7 +80,7 @@ public class HotelManagementRepository {
                     bookingList.add(booking);
                     bookingMap.put(booking.getBookingAadharCard(),bookingList);
                 }
-                return hotel.getPricePerNight() * booking.getNoOfRooms();
+                return booking.getAmountToBePaid();
             } else {
                 return -1;
             }
@@ -90,6 +89,9 @@ public class HotelManagementRepository {
     }
 
     public int getBookings(Integer aadharCard) {
-        return bookingMap.get(aadharCard).size();
+        if(bookingMap.containsKey(aadharCard))
+            return bookingMap.get(aadharCard).size();
+        else
+            return 0;
     }
 }
